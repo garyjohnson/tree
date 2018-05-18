@@ -40,7 +40,7 @@ class TreeWindow(arcade.Window):
         self.shapes = arcade.ShapeElementList()
 
         parent_position = random.random()
-        self.trunk = TreeBit(angle=4.0, parent_position=0, children=[], generation=self.generation)
+        self.trunk = TreeBit(angle=0, parent_position=0, children=[], generation=self.generation)
         self.end_bits.append(self.trunk)
         self.all_bits.append(self.trunk)
 
@@ -50,29 +50,36 @@ class TreeWindow(arcade.Window):
         self.draw_tree_bit(self.trunk)
 
     def draw_tree_bit(self, tree_bit, base_start=None, base_length=0, base_angle=0):
-        start = base_start
-        if start is None:
-            start = Point(SCREEN_WIDTH / 2, 0)
+        if base_start is None:
+            base_start = Point(SCREEN_WIDTH / 2, 0)
 
         start_length = tree_bit.parent_position * base_length
-        base_angle_radians = base_angle * 0.017453292519
-        start_x = start.x + start_length * math.cos(base_angle_radians);
-        start_y = start.y + start_length * math.sin(base_angle_radians);
-        
+        start_point = self._rotate_point(base_start, Point(base_start.x, start_length), base_angle)
+
         length = (((self.generation - tree_bit.generation) * GENERATION_LENGTH) + self.passed_time) * GROW_RATE
         angle_degrees = (MAX_X_DRIFT * tree_bit.angle) + base_angle
 
-        angle_radians = angle_degrees * 0.017453292519
-        end_x = start.x + length * math.cos(angle_radians);
-        end_y = start.y + length * math.sin(angle_radians);
+        end_point = self._rotate_point(start_point, Point(start_point.x, length), angle_degrees)
         thickness = (((self.generation - tree_bit.generation) * GENERATION_LENGTH) + self.passed_time) * (GROW_RATE * 0.1)
 
-        print(f'draw line x:{start_x} y:{start_y} endx:{end_x}, endy:{end_y}')
-        arcade.draw_line(start_x, start_y, end_x, end_y, tree_green, thickness)
+        print(f'draw line x:{start_point.x} y:{start_point.y} endx:{end_point.x}, endy:{end_point.y}')
+        arcade.draw_line(start_point.x, start_point.y, end_point.x, end_point.y, tree_green, thickness)
 
         for child in tree_bit.children:
-            self.draw_tree_bit(child, Point(start_x, start_y), length, angle_degrees)
+            self.draw_tree_bit(child, start_point, length, angle_degrees)
 
+    def _rotate_point(self, origin, point, angle):
+        angle_radians = angle * 0.017453292519
+        s = math.sin(angle_radians)
+        c = math.cos(angle_radians)
+
+        x = point.x - origin.x
+        y = point.y - origin.y
+
+        new_x = x * c - y * s
+        new_y = x * s + y * c
+
+        return Point(new_x + origin.x, new_y + origin.y)
 
     def update(self, delta_time):
         self.passed_time += delta_time
