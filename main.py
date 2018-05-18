@@ -54,12 +54,12 @@ class TreeWindow(arcade.Window):
             base_start = Point(SCREEN_WIDTH / 2, 0)
 
         start_length = tree_bit.parent_position * base_length
-        start_point = self._rotate_point(base_start, Point(base_start.x, start_length), base_angle)
+        start_point = self._rotate_point(base_start, Point(base_start.x, base_start.y + start_length), base_angle)
 
         length = (((self.generation - tree_bit.generation) * GENERATION_LENGTH) + self.passed_time) * GROW_RATE
         angle_degrees = (MAX_X_DRIFT * tree_bit.angle) + base_angle
 
-        end_point = self._rotate_point(start_point, Point(start_point.x, length), angle_degrees)
+        end_point = self._rotate_point(start_point, Point(start_point.x, start_point.y + length), angle_degrees)
         thickness = (((self.generation - tree_bit.generation) * GENERATION_LENGTH) + self.passed_time) * (GROW_RATE * 0.1)
 
         print(f'draw line x:{start_point.x} y:{start_point.y} endx:{end_point.x}, endy:{end_point.y}')
@@ -96,8 +96,8 @@ class TreeWindow(arcade.Window):
 
         new_end_bits = []
         for end_bit in self.end_bits:
-            for i in range(0, random.randint(0, 10-self.generation)):
-                angle = (random.random() - 0.5) * 2
+            for i in range(1, random.randint(0, 10-self.generation)):
+                angle = (random.random() - 0.5) * 2.0
                 parent_position = random.random()
                 child = TreeBit(angle=angle, parent_position=parent_position, children=[], generation=self.generation)
                 end_bit.children.append(child)
