@@ -7,16 +7,40 @@ from dataclasses import dataclass
 import arcade
 
 sky_blue = (155,214,244)
-tree_green = (0,0,0)
+tree_green = (59,106,69)
 
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 600
 GENERATION_LENGTH = 5.0
 MAX_X_DRIFT = 20.0
 MAX_Y_DRIFT = 60.0
-GROW_RATE = 5.0
+GROW_RATE = 100.0
+GIRTH_RATE = 20.0
+MAX_GENERATIONS = 6
 
-Point = namedtuple('Point', ['x','y'])
+@dataclass
+class Point:
+
+    x: float = 0.0
+    y: float = 0.0
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def rotated(self, origin, angle):
+        angle_radians = angle * 0.017453292519
+        s = math.sin(angle_radians)
+        c = math.cos(angle_radians)
+
+        x = self.x - origin.x
+        y = self.y - origin.y
+
+        new_x = x * c - y * s
+        new_y = x * s + y * c
+
+        return Point(new_x + origin.x, new_y + origin.y)
+
 
 @dataclass
 class TreeBit():
@@ -25,12 +49,14 @@ class TreeBit():
     children: list
     generation: int
 
+
 class TreeWindow(arcade.Window):
 
     shapes = None
     trunk = None
     generation = 0
     passed_time = 0.0
+    total_passed_time = 0.0
     end_bits = []
     all_bits = []
 
@@ -47,56 +73,26 @@ class TreeWindow(arcade.Window):
     def on_draw(self):
         arcade.start_render()
 
-        self.draw_tree_bit(self.trunk)
-
-    def draw_tree_bit(self, tree_bit, base_start=None, base_length=0, base_angle=0):
-        if base_start is None:
-            base_start = Point(SCREEN_WIDTH / 2, 0)
-
-        start_length = tree_bit.parent_position * base_length
-        start_point = self._rotate_point(base_start, Point(base_start.x, base_start.y + start_length), base_angle)
-
-        length = (((self.generation - tree_bit.generation) * GENERATION_LENGTH) + self.passed_time) * GROW_RATE
-        angle_degrees = (MAX_X_DRIFT * tree_bit.angle) + base_angle
-
-        end_point = self._rotate_point(start_point, Point(start_point.x, start_point.y + length), angle_degrees)
-        thickness = (((self.generation - tree_bit.generation) * GENERATION_LENGTH) + self.passed_time) * (GROW_RATE * 0.1)
-
-        print(f'draw line x:{start_point.x} y:{start_point.y} endx:{end_point.x}, endy:{end_point.y}')
-        arcade.draw_line(start_point.x, start_point.y, end_point.x, end_point.y, tree_green, thickness)
-
-        for child in tree_bit.children:
-            self.draw_tree_bit(child, start_point, length, angle_degrees)
-
-    def _rotate_point(self, origin, point, angle):
-        angle_radians = angle * 0.017453292519
-        s = math.sin(angle_radians)
-        c = math.cos(angle_radians)
-
-        x = point.x - origin.x
-        y = point.y - origin.y
-
-        new_x = x * c - y * s
-        new_y = x * s + y * c
-
-        return Point(new_x + origin.x, new_y + origin.y)
+        self._draw_tree_bit(self.trunk)
 
     def update(self, delta_time):
         self.passed_time += delta_time
-        if self.passed_time > GENERATION_LENGTH:
+        self.total_passed_time += delta_time
+        if self.generation < MAX_GENERATIONS and self.passed_time > GENERATION_LENGTH:
             self.passed_time = self.passed_time % GENERATION_LENGTH
             self._add_generation()
 
 
     def _add_generation(self):
-        if self.generation >= 5:
-            pass
-
         self.generation = self.generation + 1
 
         new_end_bits = []
         for end_bit in self.end_bits:
-            for i in range(1, random.randint(0, 10-self.generation)):
+            end_range = random.randint(2, (MAX_GENERATIONS+6)-self.generation)
+            if end_range <= 1:
+                break
+
+            for i in range(1, end_range):
                 angle = (random.random() - 0.5) * 2.0
                 parent_position = random.random()
                 child = TreeBit(angle=angle, parent_position=parent_position, children=[], generation=self.generation)
@@ -106,6 +102,29 @@ class TreeWindow(arcade.Window):
 
         self.end_bits = new_end_bits
 
+    def _draw_tree_bit(self, tree_bit, base_start=None, base_length=0, base_angle=0):
+        if base_start is None:
+            base_start = Point(SCREEN_WIDTH / 2, 0)
+
+        start_length = tree_bit.parent_position * base_length
+        start_point = Point(base_start.x, base_start.y + start_length).rotated(base_start, base_angle)
+
+        age = self._tree_bit_age(tree_bit)
+
+        length = math.sqrt(age * GROW_RATE * 30) / (tree_bit.generation + 1)
+        angle_degrees = (MAX_X_DRIFT * tree_bit.angle) + base_angle
+
+        end_point = Point(start_point.x, start_point.y + length).rotated(start_point, angle_degrees)
+        thickness = math.sqrt(age* (GIRTH_RATE * 0.1))
+
+        #print(f'draw line x:{start_point.x} y:{start_point.y} endx:{end_point.x}, endy:{end_point.y}')
+        arcade.draw_line(start_point.x, start_point.y, end_point.x, end_point.y, tree_green, thickness)
+
+        for child in tree_bit.children:
+            self._draw_tree_bit(child, start_point, length, angle_degrees)
+
+    def _tree_bit_age(self, tree_bit):
+        return ((self.generation - tree_bit.generation) * GENERATION_LENGTH) + self.passed_time
 
 def main():
     window = TreeWindow(SCREEN_WIDTH, SCREEN_HEIGHT)
