@@ -12,17 +12,19 @@ SCREEN_HEIGHT = 600
 def main
   set width: SCREEN_WIDTH, height: SCREEN_HEIGHT
   set background: SKY_BLUE
+
   logger = Logger.new()
   tree = Tree.new(SCREEN_WIDTH, SCREEN_HEIGHT, logger)
 
   tick = 0.0
   update do
-    tick += (1.0/100000.0)
+    tick += 0.00001
     logger.clear
-    tree.update(tick)
-    tree.draw
-
     logger.print "#{(get :fps).round(2)} FPS"
+
+    tree.update(tick)
+
+    tree.draw
     logger.draw
   end
 

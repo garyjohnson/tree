@@ -15,8 +15,6 @@ GIRTH_RATE_DRIFT = 0.25
 
 class Tree
 
-  attr_accessor :generation
-
   def initialize(width, height, logger)
     @width = width
     @height = height
@@ -47,6 +45,7 @@ class Tree
       @passed_time = @passed_time % GENERATION_LENGTH
       add_generation
     end
+
     @logger.print "#{@all_bits.length} tree bits"
     @logger.print "generation #{@generation}"
     @logger.print "grow rate: #{@grow_rate.round(6)}"

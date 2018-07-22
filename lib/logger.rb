@@ -4,10 +4,6 @@ DEFAULT_FONT_SPACING = 5
 
 class Logger
 
-  @messages
-  @used_texts
-  @unused_texts
-
   def initialize()
     @messages = []
     @used_texts = []
