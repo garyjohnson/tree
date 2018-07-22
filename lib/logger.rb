@@ -4,7 +4,8 @@ DEFAULT_FONT_SPACING = 5
 
 class Logger
 
-  def initialize()
+  def initialize(world)
+    @world = world
     @messages = []
     @used_texts = []
     @unused_texts = []
@@ -29,7 +30,7 @@ class Logger
 
   def draw
     text_height = DEFAULT_FONT_SIZE + DEFAULT_FONT_SPACING
-    y_pos = SCREEN_HEIGHT - (@messages.length * text_height)
+    y_pos = @world.screen_height - (@messages.length * text_height)
     @messages.each do |message|
       text = get_or_create_text
       text.x = 0
@@ -38,6 +39,8 @@ class Logger
       y_pos += text_height
     end
   end
+
+  private
 
   def get_or_create_text
     text = @unused_texts.first

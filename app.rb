@@ -1,20 +1,21 @@
 #!/usr/bin/env ruby
 
+libdir = 'lib'
+$LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
+
 require 'ruby2d'
-require_relative 'lib/logger.rb'
-require_relative 'lib/tree.rb'
-
-SKY_BLUE = '#009AE3'
-
-SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 600
+require 'logger'
+require 'tree'
+require 'world'
 
 def main
-  set width: SCREEN_WIDTH, height: SCREEN_HEIGHT
-  set background: SKY_BLUE
+  world = World.new
 
-  logger = Logger.new()
-  tree = Tree.new(SCREEN_WIDTH, SCREEN_HEIGHT, logger)
+  set width: world.screen_width, height: world.screen_height
+  set background: world.background_color
+
+  logger = Logger.new(world)
+  tree = Tree.new(world, logger)
 
   tick = 0.0
   update do
