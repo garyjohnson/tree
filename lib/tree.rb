@@ -19,12 +19,14 @@ class Tree
     @width = width
     @height = height
     @logger = logger
+
     @random = Random.new
     @end_bits = []
     @all_bits = []
     @generation = 0
     @passed_time = 0.0
     @total_passed_time = 0.0
+
     @grow_rate = (DEFAULT_GROW_RATE + (@random.rand(-0.5..0.5) * GROW_RATE_DRIFT))
     @girth_rate = (DEFAULT_GIRTH_RATE + (@random.rand(-0.5..0.5) * GIRTH_RATE_DRIFT))
 
